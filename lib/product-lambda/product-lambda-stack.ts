@@ -4,6 +4,14 @@ import { Construct } from "constructs";
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import path from 'path';
 
+const ALLOWED_ORIGIN = 'https://d31bu5dobdv1pd.cloudfront.net';
+const CORS_RESPONSE_PARAMETERS = {
+  'method.response.header.Access-Control-Allow-Origin': "'" + ALLOWED_ORIGIN + "'",
+};
+const CORS_METHOD_RESPONSE_PARAMETERS = {
+  'method.response.header.Access-Control-Allow-Origin': true,
+};
+
 export class ProductLambdaStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
       super(scope, id, props);
@@ -29,10 +37,89 @@ export class ProductLambdaStack extends Stack {
       });
 
       const productsResource = api.root.addResource('products');
-      productsResource.addMethod('GET', new apigateway.LambdaIntegration(getAllProductsFunction));
+      const getAllProductsLambdaIntegration = new apigateway.LambdaIntegration(getAllProductsFunction, {
+        integrationResponses: [
+          {
+            statusCode: '200',
+            responseParameters: CORS_RESPONSE_PARAMETERS,
+          },
+          {
+            statusCode: '500',
+            selectionPattern: '.*Failed to fetch product.*',
+            responseParameters: CORS_RESPONSE_PARAMETERS
+          }
+        ],
+        proxy: false,
+      });
+      productsResource.addMethod('GET', getAllProductsLambdaIntegration, {
+        methodResponses: [
+          { 
+            statusCode: '200',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+          },
+          { 
+            statusCode: '500',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+          },
+        ]
+      });
 
       const productByIdResource = productsResource.addResource('{id}');
-      productByIdResource.addMethod('GET', new apigateway.LambdaIntegration(getProductByIdFunction));
+      const getProductByIdLambdaIntegration = new apigateway.LambdaIntegration(getProductByIdFunction, {
+        integrationResponses: [
+          {
+            statusCode: '200',
+            responseParameters: CORS_RESPONSE_PARAMETERS,
+          },
+          {
+            statusCode: '400',
+            selectionPattern: '.*Product id required.*',
+            responseParameters: CORS_RESPONSE_PARAMETERS,
+          },
+          {
+            statusCode: '404',
+            selectionPattern: '.*Product not found.*',
+            responseParameters: CORS_RESPONSE_PARAMETERS,
+          },
+          {
+            statusCode: '500',
+            selectionPattern: '.*Failed to fetch products.*',
+            responseParameters: CORS_RESPONSE_PARAMETERS,
+          },
+        ],
+        requestTemplates: {
+          'application/json': JSON.stringify({
+            pathParameters: {
+              id: "$input.params('id')",
+            },
+          }),
+        },
+        proxy: false,
+      });
+      productByIdResource.addMethod('GET', getProductByIdLambdaIntegration, {
+        methodResponses: [
+          { 
+            statusCode: '200',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+          },
+          { 
+            statusCode: '400',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+          },
+          { 
+            statusCode: '404',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+          },
+          { 
+            statusCode: '500',
+            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+          },
+        ]
+      });
  
+      productsResource.addCorsPreflight({
+        allowOrigins: [ALLOWED_ORIGIN],
+        allowMethods: ['GET'],
+      });
     }
   }
