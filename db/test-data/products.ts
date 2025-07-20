@@ -1,4 +1,4 @@
-import { Product } from "../entities/product";
+import { Product } from "../../lib/product-lambda/entities/product";
 
 export const products: Product[] = [
     {
@@ -70,5 +70,41 @@ export const products: Product[] = [
       "description": "Compact noise-canceling earbuds with excellent sound quality.",
       "price": 79.99,
       "count": 18
-    }
+    },
+    {
+      "id": "k1l2m3n4-o5p6-q7r8-s9t0-u1v2w3x4y6z7",
+      "title": "Gaming Chair",
+      "description": "Ergonomic gaming chair with adjustable lumbar support and headrest.",
+      "price": 249.99,
+      "count": 5
+  },
+  {
+      "id": "l2m3n4o5-p6q7-r8s9-t0u1-v2w3x4y6z7a8",
+      "title": "Portable Power Bank",
+      "description": "10,000mAh portable power bank with fast charging capabilities.",
+      "price": 39.99,
+      "count": 60
+  },
+  // not added yet
+  {
+      "id": "m3n4o5p6-q7r8-s9t0-u1v2-w3x4y6z7a8b9",
+      "title": "Wireless Earbuds",
+      "description": "Compact wireless earbuds with noise-canceling and long battery life.",
+      "price": 89.99,
+      "count": 25
+  },
+  {
+      "id": "n4o5p6q7-r8s9-t0u1-v2w3-x4y6z7a8b9c0",
+      "title": "Smart Thermostat",
+      "description": "Wi-Fi enabled smart thermostat with energy-saving features.",
+      "price": 149.99,
+      "count": 15
+  },
+  {
+      "id": "o5p6q7r8-s9t0-u1v2-w3x4-y6z7a8b9c0d1",
+      "title": "Tablet Stand",
+      "description": "Adjustable tablet stand compatible with various tablet sizes.",
+      "price": 24.99,
+      "count": 50
+  }
 ]
