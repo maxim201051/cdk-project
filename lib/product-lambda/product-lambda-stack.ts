@@ -5,6 +5,10 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import path from 'path';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 
 const ALLOWED_ORIGIN = 'https://d31bu5dobdv1pd.cloudfront.net';
 const CORS_RESPONSE_PARAMETERS = {
@@ -15,9 +19,21 @@ const CORS_METHOD_RESPONSE_PARAMETERS = {
 };
 
 export class ProductLambdaStack extends Stack {
+    public readonly catalogItemsQueue: Queue;
+
     constructor(scope: Construct, id: string, props?: StackProps) {
       super(scope, id, props);
 
+      //sns
+      const createProductTopic = new Topic(this, 'CreateProductTopic', {
+        displayName: 'Create Product Notifications',
+      });
+
+      createProductTopic.addSubscription(
+        new EmailSubscription('maksym201051@mailinator.com') 
+      );
+
+      //functions
       const getAllProductsFunction = new NodejsFunction(this, 'GetAllProductsFunction', {
         runtime: lambda.Runtime.NODEJS_20_X,
         memorySize: 1024,
@@ -40,6 +56,17 @@ export class ProductLambdaStack extends Stack {
         timeout: Duration.seconds(5),
         handler: 'main',
         entry: path.join(__dirname, './create-product.ts'),
+      });
+
+      const catalogBatchProcessFunction = new NodejsFunction(this, 'CatalogBatchProcess', {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        memorySize: 1024,
+        timeout: Duration.seconds(5),
+        handler: 'main',
+        entry: path.join(__dirname, './catalog-batch-pocess.ts'),
+        environment: {
+          SNS_TOPIC_ARN: createProductTopic.topicArn, 
+        },
       });
 
       const api = new apigateway.RestApi(this, 'ProductApi', {
@@ -181,16 +208,33 @@ export class ProductLambdaStack extends Stack {
       productsTable.grantReadData(getAllProductsFunction);
       productsTable.grantReadData(getProductByIdFunction);
       productsTable.grantWriteData(createProductFunction);
+      productsTable.grantWriteData(catalogBatchProcessFunction);
 
       const stockTable = Table.fromTableName(this, "ImportedStockTable", "stock");
       stockTable.grantReadData(getAllProductsFunction);
       stockTable.grantReadData(getProductByIdFunction);
       stockTable.grantWriteData(createProductFunction);
+      stockTable.grantWriteData(catalogBatchProcessFunction);
+
+      createProductTopic.grantPublish(catalogBatchProcessFunction);
 
       //CORS
       productsResource.addCorsPreflight({
         allowOrigins: [ALLOWED_ORIGIN],
         allowMethods: ['GET', 'POST'],
       });
+
+      //sqs
+      this.catalogItemsQueue = new Queue(this, 'CatalogItemsQueue', {
+        visibilityTimeout: Duration.seconds(30), 
+        receiveMessageWaitTime: Duration.seconds(20),
+      });
+
+      catalogBatchProcessFunction.addEventSource(
+        new SqsEventSource(this.catalogItemsQueue, {
+          batchSize: 5,
+        })
+      );
+
     }
-  }
+}

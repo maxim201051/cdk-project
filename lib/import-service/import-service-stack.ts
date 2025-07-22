@@ -7,6 +7,7 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import path from "path";
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { ProductLambdaStack } from '../product-lambda/product-lambda-stack';
 
 const ALLOWED_ORIGIN = 'https://d31bu5dobdv1pd.cloudfront.net';
 const CORS_RESPONSE_PARAMETERS = {
@@ -18,7 +19,7 @@ const CORS_METHOD_RESPONSE_PARAMETERS = {
 
 
 export class ImportServiceStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, productlambdaStack: ProductLambdaStack, props?: StackProps) {
     super(scope, id, props);
 
     const importBucket = new Bucket(this, "ImportBucket", {
@@ -122,6 +123,9 @@ export class ImportServiceStack extends Stack {
       { prefix: "uploaded/" } 
     );
     
+    const catalogItemsQueue = productlambdaStack.catalogItemsQueue;
+    importFileParserFunction.addEnvironment('CATALOG_ITEMS_QUEUE_URL', catalogItemsQueue.queueUrl);
+    catalogItemsQueue.grantSendMessages(importFileParserFunction);
 
     new CfnOutput(this, "BucketName", {
       value: importBucket.bucketName,
