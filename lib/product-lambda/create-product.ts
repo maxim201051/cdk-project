@@ -7,12 +7,6 @@ export const main = async (event: any) => {
         const body = event.body;
         const product: Product = ProductSchema.parse(body);
         
-        const { id, title, description, price, count } = body;
-        if (!id || !title || !price || count === undefined) {
-            return {
-                error: "Missing required fields: id, title, price, or count" 
-            };
-        }
         await productService.createProduct(product);
         return product;
     } catch (error: any) {

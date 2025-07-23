@@ -2,11 +2,11 @@ import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } fr
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import csv from "csv-parser";
 import { Readable } from "stream";
+import { constants } from "./constants/constants";
 
-const REGION = "eu-west-2"; 
 const catalogItemsQueueUrl = process.env.CATALOG_ITEMS_QUEUE_URL!;
-const s3Client = new S3Client({ region: REGION });
-const sqsClient = new SQSClient({ region: REGION });
+const s3Client = new S3Client({ region: constants.REGION });
+const sqsClient = new SQSClient({ region: constants.REGION });
 
 export const main = async (event: any) => {
   try {

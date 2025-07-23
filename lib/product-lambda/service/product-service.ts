@@ -1,25 +1,22 @@
 import { DynamoDBClient, ScanCommand, GetItemCommand, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { Product } from "../entities/product";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { constants } from "./../constants/constants";
 
-const REGION = "eu-west-2"; 
-const PRODUCTS_TABLE_NAME = "products"; 
-const STOCK_TABLE_NAME = "stock"; 
-
-const dynamoDBClient = new DynamoDBClient({ region: REGION });
+const dynamoDBClient = new DynamoDBClient({ region: constants.REGION });
 
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
     try {
       const productsCommand = new ScanCommand({
-        TableName: PRODUCTS_TABLE_NAME,
+        TableName: constants.PRODUCTS_TABLE_NAME,
       });
       const productsResponse = await dynamoDBClient.send(productsCommand);
 
       const products = productsResponse.Items?.map(item => unmarshall(item) as Product) || [];
 
       const stockCommand = new ScanCommand({
-        TableName: STOCK_TABLE_NAME,
+        TableName: constants.STOCK_TABLE_NAME,
       });
       const stockResponse = await dynamoDBClient.send(stockCommand);
 
@@ -44,7 +41,7 @@ export const productService = {
   async getProductById(productId: string): Promise<Product | null> {
     try {
       const productCommand = new GetItemCommand({
-        TableName: PRODUCTS_TABLE_NAME,
+        TableName: constants.PRODUCTS_TABLE_NAME,
         Key: {
           id: { S: productId },
         },
@@ -58,7 +55,7 @@ export const productService = {
       const product = unmarshall(productResponse.Item) as Product;
 
       const stockCommand = new GetItemCommand({
-        TableName: STOCK_TABLE_NAME,
+        TableName: constants.STOCK_TABLE_NAME,
         Key: {
           product_id: { S: productId },
         },
@@ -82,7 +79,7 @@ export const productService = {
   async createProduct(product: Product): Promise<void> {
     try {
       const productsCommand = new PutItemCommand({
-        TableName: PRODUCTS_TABLE_NAME,
+        TableName: constants.PRODUCTS_TABLE_NAME,
         Item: {
           id: { S: product.id },
           title: { S: product.title },
@@ -93,7 +90,7 @@ export const productService = {
       await dynamoDBClient.send(productsCommand);
   
       const stockCommand = new PutItemCommand({
-        TableName: STOCK_TABLE_NAME,
+        TableName: constants.STOCK_TABLE_NAME,
         Item: {
           product_id: { S: product.id },
           count: { N: product.count.toString() },

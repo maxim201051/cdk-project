@@ -1,8 +1,9 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { constants } from "./constants/constants";
 
 
-const s3Client = new S3Client({ region: 'eu-west-2' });
+const s3Client = new S3Client({ region: constants.REGION });
 
 export const main = async (event: any) => {
     try {

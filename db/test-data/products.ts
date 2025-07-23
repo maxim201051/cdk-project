@@ -85,7 +85,6 @@ export const products: Product[] = [
       "price": 39.99,
       "count": 60
   },
-  // not added yet
   {
       "id": "m3n4o5p6-q7r8-s9t0-u1v2-w3x4y6z7a8b9",
       "title": "Wireless Earbuds",
@@ -100,6 +99,7 @@ export const products: Product[] = [
       "price": 149.99,
       "count": 15
   },
+  // not added yet
   {
       "id": "o5p6q7r8-s9t0-u1v2-w3x4-y6z7a8b9c0d1",
       "title": "Tablet Stand",

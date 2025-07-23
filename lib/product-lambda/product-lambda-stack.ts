@@ -9,14 +9,7 @@ import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
-
-const ALLOWED_ORIGIN = 'https://d31bu5dobdv1pd.cloudfront.net';
-const CORS_RESPONSE_PARAMETERS = {
-  'method.response.header.Access-Control-Allow-Origin': "'" + ALLOWED_ORIGIN + "'",
-};
-const CORS_METHOD_RESPONSE_PARAMETERS = {
-  'method.response.header.Access-Control-Allow-Origin': true,
-};
+import { constants } from './constants/constants';
 
 export class ProductLambdaStack extends Stack {
     public readonly catalogItemsQueue: Queue;
@@ -81,12 +74,12 @@ export class ProductLambdaStack extends Stack {
         integrationResponses: [
           {
             statusCode: '200',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '500',
             selectionPattern: '.*Failed to fetch product.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS
           }
         ],
         proxy: false,
@@ -95,11 +88,11 @@ export class ProductLambdaStack extends Stack {
         methodResponses: [
           { 
             statusCode: '200',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS,
           },
           { 
             statusCode: '500',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS 
           },
         ]
       });
@@ -109,17 +102,17 @@ export class ProductLambdaStack extends Stack {
         integrationResponses: [
           {
             statusCode: '201',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '400',
             selectionPattern: '.*Invalid product data.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '500',
             selectionPattern: '.*Failed to create product.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS
           }
         ],
         requestTemplates: {
@@ -136,15 +129,15 @@ export class ProductLambdaStack extends Stack {
         methodResponses: [
           { 
             statusCode: '201',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS,
           },
           { 
             statusCode: '400',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS,
           },
           { 
             statusCode: '500',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS 
           },
         ]
       });
@@ -155,22 +148,22 @@ export class ProductLambdaStack extends Stack {
         integrationResponses: [
           {
             statusCode: '200',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '400',
             selectionPattern: '.*Product id required.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '404',
             selectionPattern: '.*Product not found.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
           {
             statusCode: '500',
             selectionPattern: '.*Failed to fetch products.*',
-            responseParameters: CORS_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_RESPONSE_PARAMETERS,
           },
         ],
         requestTemplates: {
@@ -186,19 +179,19 @@ export class ProductLambdaStack extends Stack {
         methodResponses: [
           { 
             statusCode: '200',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS,
           },
           { 
             statusCode: '400',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS 
           },
           { 
             statusCode: '404',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS,
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS,
           },
           { 
             statusCode: '500',
-            responseParameters: CORS_METHOD_RESPONSE_PARAMETERS 
+            responseParameters: constants.CORS_METHOD_RESPONSE_PARAMETERS 
           },
         ]
       });
@@ -220,7 +213,7 @@ export class ProductLambdaStack extends Stack {
 
       //CORS
       productsResource.addCorsPreflight({
-        allowOrigins: [ALLOWED_ORIGIN],
+        allowOrigins: [constants.ALLOWED_ORIGIN],
         allowMethods: ['GET', 'POST'],
       });
 
