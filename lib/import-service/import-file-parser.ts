@@ -1,8 +1,12 @@
 import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import csv from "csv-parser";
 import { Readable } from "stream";
+import { constants } from "./constants/constants";
 
-const s3Client = new S3Client({ region: "eu-west-2" });
+const catalogItemsQueueUrl = process.env.CATALOG_ITEMS_QUEUE_URL!;
+const s3Client = new S3Client({ region: constants.REGION });
+const sqsClient = new SQSClient({ region: constants.REGION });
 
 export const main = async (event: any) => {
   try {
@@ -27,13 +31,38 @@ export const main = async (event: any) => {
       const response = await s3Client.send(getObjectCommand);
       const stream = response.Body as Readable;
 
+      const sendMessagePromises: any[] = [];
+
       await new Promise<void>((resolve, reject) => {
         stream
           .pipe(csv({ separator: "|" }))
           .on("data", (data: any) => {
-            console.log("Parsed record:", data);
+            const message = {
+              id: data.id,
+              title: data.title,
+              description: data.description,
+              price: parseFloat(data.price),
+              count: parseInt(data.count, 10),
+            };
+            sendMessagePromises.push(
+              sqsClient.send(
+                new SendMessageCommand({
+                  QueueUrl: catalogItemsQueueUrl,
+                  MessageBody: JSON.stringify(message),
+                })
+              )
+            );
           })
           .on("end", async () => {
+            try {
+              await Promise.all(sendMessagePromises);
+              console.log("All messages sent to SQS.");
+              resolve();
+            } catch (error) {
+              console.error("Error sending messages to SQS:", error);
+              reject(error);
+            }
+            
             console.log(`Finished processing file: ${objectKey}`);
 
             const processedKey = objectKey.replace("uploaded/", "processed/");
